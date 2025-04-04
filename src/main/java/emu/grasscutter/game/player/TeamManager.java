@@ -27,6 +27,7 @@ import it.unimi.dsi.fastutil.ints.*;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.*;
 import emu.grasscutter.database.Database;
@@ -102,36 +103,6 @@ public final class TeamManager extends BasePlayerDataManager {
                 abilityControlBlock.addAbilityEmbryoList(emb);
             }
         }
-
-//        // 处理Level_Monster_Nada_setting配置
-//        // Handle Level_Monster_Nada_setting config
-//        String levelEntityConfig = getPlayer().getScene().getSceneData().getLevelEntityConfig();
-//        ConfigLevelEntity configLevelEntity = GameData.getConfigLevelEntityDataMap().get(levelEntityConfig);
-//
-//        if (configLevelEntity != null) {
-//            List<ConfigAbilityData> teamAbilities = configLevelEntity.getTeamAbilities();
-//            if (teamAbilities != null) {
-//                for (ConfigAbilityData skill : teamAbilities) {
-//
-//                    if (skill != null && skill.abilityName != null) {
-//                        Grasscutter.getLogger().info("Loading team ability: [{}] from config {} as embryoId {}",
-//                            skill, levelEntityConfig, embryoId);
-//
-//                        AbilityEmbryoOuterClass.AbilityEmbryo emb =
-//                            AbilityEmbryoOuterClass.AbilityEmbryo.newBuilder()
-//                                .setAbilityId(++embryoId)
-//                                .setAbilityNameHash(Utils.abilityHash(skill.abilityName))
-//                                .setAbilityOverrideNameHash(GameConstants.DEFAULT_ABILITY_NAME)
-//                                .build();
-//                        abilityControlBlock.addAbilityEmbryoList(emb);
-//                    } else {
-//                        Grasscutter.getLogger().warn("Invalid skill config in {}", levelEntityConfig);
-//                    }
-//                }
-//            }else {
-//                Grasscutter.getLogger().warn("No team abilities found in config: {}", levelEntityConfig);
-//            }
-//        }
 
         // same as avatar ability hash (add frm levelEntityConfig data)
         if (this.getTeamAbilityEmbryos().size() > 0) {
@@ -1031,10 +1002,11 @@ public final class TeamManager extends BasePlayerDataManager {
     * Performs a bulk save operation on all avatars.
     */
     public void saveAvatars() {
-        // Save all avatars from active team
-        Database.saveAll(this.getActiveTeam().stream()
-                .map(EntityAvatar::getAvatar)
-                .toList());
+        List<Avatar> avatarsToSave = this.getActiveTeam().stream()
+            .map(EntityAvatar::getAvatar)
+            .collect(Collectors.toCollection(ArrayList::new));
+
+        Database.saveAll(avatarsToSave);
     }
 
     public void onPlayerLogin() { // Hack for now to fix resonances on login
